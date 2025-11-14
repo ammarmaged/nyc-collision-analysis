@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# Ignore all data files to prevent large dataset commits
+*.csv
+*.json
+*.parquet
