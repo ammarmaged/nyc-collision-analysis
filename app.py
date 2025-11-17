@@ -1,12 +1,15 @@
 
 import pandas as pd
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State, callback
 import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
 
 # -----------------------------
 # Load Parquet file
 # -----------------------------
-df = pd.read_parquet("E:/giu/fifth semster/project data e/nyc-collision-analysis/data/integrated_dataset_cleaned.parquet")
+data_path = Path(__file__).parent / "integrated_dataset_cleaned.parquet"
+df = pd.read_parquet(data_path)
 # Ensure CRASH_DATETIME is datetime type and extract year
 df['CRASH_DATETIME'] = pd.to_datetime(df['CRASH_DATETIME'], errors='coerce')
 df['CRASH_YEAR'] = df['CRASH_DATETIME'].dt.year
