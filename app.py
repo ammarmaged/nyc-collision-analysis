@@ -124,13 +124,14 @@ def toggle_sidebar(n_clicks):
         Output("person_injury-filter", "value"),
         Output("person_sex-filter", "value"),
         Output("position_in_vehicle-filter", "value"),
+        Output("safety_equipment-filter", "value"),
     ],
     [Input("search-input", "value")]
 )
 def apply_search_to_filters(search_value):
     # If no search or empty, clear all filters
     if not search_value:
-        return [None, None, None, None, None, None]
+        return [None, None, None, None, None, None, None]
 
     import re
 
@@ -201,8 +202,9 @@ def apply_search_to_filters(search_value):
     person_injury_val = _find_matches_for_column("PERSON_INJURY")
     person_sex_val = _find_matches_for_column("PERSON_SEX")
     position_val = _find_matches_for_column("POSITION_IN_VEHICLE")
+    safety_equipment_val = _find_matches_for_column("SAFETY_EQUIPMENT")
 
-    return [year_val, borough_val, person_type_val, person_injury_val, person_sex_val, position_val]
+    return [year_val, borough_val, person_type_val, person_injury_val, person_sex_val, position_val, safety_equipment_val]
 
 
 if __name__ == "__main__":
@@ -217,6 +219,7 @@ if __name__ == "__main__":
         Output("person_injury-filter", "value"),
         Output("person_sex-filter", "value"),
         Output("position_in_vehicle-filter", "value"),
+        Output("safety_equipment-filter", "value"),
     ],
     [
         Input("year-filter", "value"),
@@ -225,10 +228,11 @@ if __name__ == "__main__":
         Input("person_injury-filter", "value"),
         Input("person_sex-filter", "value"),
         Input("position_in_vehicle-filter", "value"),
+        Input("safety_equipment-filter", "value"),
     ],
     prevent_initial_call=True
 )
-def expand_all_selections(year_v, borough_v, ptype_v, pinjury_v, psex_v, position_v):
+def expand_all_selections(year_v, borough_v, ptype_v, pinjury_v, psex_v, position_v, safety_v):
     """If a dropdown contains the special value "__ALL__", replace it
     with the full list of available values from `df_with_year` for that column.
     Returns the (possibly) expanded lists for each dropdown.
@@ -253,6 +257,7 @@ def expand_all_selections(year_v, borough_v, ptype_v, pinjury_v, psex_v, positio
         _expand(pinjury_v, "PERSON_INJURY"),
         _expand(psex_v, "PERSON_SEX"),
         _expand(position_v, "POSITION_IN_VEHICLE"),
+        _expand(safety_v, "SAFETY_EQUIPMENT"),
     ]
 
 
