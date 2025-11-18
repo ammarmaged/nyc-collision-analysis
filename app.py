@@ -163,30 +163,31 @@ def apply_search_to_filters(search_value):
     def _find_matches_for_column(column_name):
         """
         Return a list of candidate values (original types) matching any token.
-        Matches exact token first, then substring matches. Preserves candidate order
-        and avoids duplicates.
+        Prioritizes: exact token match > whole-word match.
+        Does NOT use substring matching to avoid matching 'male' to 'female'.
         """
         if df_with_year is None or column_name not in df_with_year.columns:
             return None
         unique_vals = df_with_year[column_name].dropna().unique()
-        # build list of (label_lower, original_value)
+        # build list of (label_lower, label_words, original_value)
         candidates = []
         for v in unique_vals:
             label = _format_label(v).lower()
-            candidates.append((label, v))
+            words = label.split()  # split by whitespace
+            candidates.append((label, words, v))
 
         matched = []
 
-        # exact matches first
+        # 1. Exact full-label matches (e.g., token "male" exactly equals label "male")
         for token in tokens:
-            for label, v in candidates:
+            for label, words, v in candidates:
                 if label == token and v not in matched:
                     matched.append(v)
 
-        # substring matches next
+        # 2. Whole-word matches (e.g., token "male" is a word in "male driver", NOT in "female")
         for token in tokens:
-            for label, v in candidates:
-                if token in label and v not in matched:
+            for label, words, v in candidates:
+                if token in words and v not in matched:
                     matched.append(v)
 
         if not matched:
