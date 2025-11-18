@@ -195,6 +195,7 @@ FILTER_COLUMNS = [
     {'column': 'PERSON_SEX', 'label': 'Person Sex'},
     {'column': 'POSITION_IN_VEHICLE', 'label': 'Position in Vehicle'},
     {'column': 'SAFETY_EQUIPMENT', 'label': 'Safety Equipment'},
+    {'column': 'BODILY_INJURY', 'label': 'Bodily Injury'},
 ]
 
 # Add YEAR filter if CRASH_DATETIME exists
