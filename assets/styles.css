@@ -1,24 +1,37 @@
 /* ============================
-   NYC Collision Analysis Dashboard
-   Professional CSS Styling
+   iPhone 17 Pro – NYC Dashboard Theme
    ============================ */
 
-/* Root variables for consistent theming */
-:root {
-    --primary-color: #3498db;
-    --secondary-color: #2c3e50;
-    --accent-color: #e74c3c;
-    --light-bg: #ecf0f1;
+   :root {
+    --primary-color: #0a84ff;           /* iOS blue */
+    --primary-soft: rgba(10, 132, 255, 0.18);
+    --secondary-color: #1c1c1e;        /* iOS dark background */
+    --accent-color: #ff453a;           /* iOS red */
+    --accent-soft: rgba(255, 69, 58, 0.16);
+    --success-color: #32d74b;
+    --warning-color: #ffd60a;
+    --danger-color: #ff453a;
+
+    --bg-main: radial-gradient(circle at top, #1b2735 0%, #090a0f 55%, #000000 100%);
+    --glass-bg: rgba(28, 28, 30, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-soft-bg: rgba(44, 44, 46, 0.85);
+
     --white: #ffffff;
-    --text-dark: #2c3e50;
-    --text-light: #ecf0f1;
-    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --text-dark: #f5f5f7;
+    --text-muted: #a1a1aa;
+
+    --shadow-light: 0 18px 40px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.2);
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --border-radius: 8px;
+    --border-radius: 18px;
+    --border-radius-lg: 26px;
+
+    --blur-strong: 28px;
 }
 
-/* Global styles */
+/* Reset / global */
 * {
     margin: 0;
     padding: 0;
@@ -26,60 +39,57 @@
 }
 
 html, body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    background: var(--bg-main);
+    color: var(--text-dark);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--light-bg);
 }
 
-/* Main layout container */
 #app {
     width: 100%;
     min-height: 100vh;
-    background-color: var(--light-bg);
+    background: transparent;
+    position: relative;
+    overflow-x: hidden;
 }
 
 /* ============================
-   Toggle Button Styling
+   Toggle Button (floating)
    ============================ */
 
 #toggle-button {
     position: fixed;
     top: 20px;
-    left: 20px;
-    z-index: 1001;
-    padding: 12px 18px;
-    background: linear-gradient(135deg, var(--primary-color), #2980b9);
+    right: 24px;   /* move to right */
+    left: auto;
+    z-index: 1100;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.16), rgba(10,10,10,0.95));
     color: var(--white);
-    border: none;
-    border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    box-shadow: var(--shadow-medium);
+    letter-spacing: 0.4px;
+    box-shadow: var(--shadow-soft);
     transition: var(--transition-smooth);
-    user-select: none;
     display: flex;
     align-items: center;
     gap: 8px;
+    backdrop-filter: blur(16px);
 }
 
 #toggle-button:hover {
-    background: linear-gradient(135deg, #2980b9, #1f618d);
-    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
-    transform: translateY(-2px);
-}
-
-#toggle-button:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-light);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.20), rgba(10,10,10,0.95));
 }
 
 /* ============================
-   Sidebar Styling
+   Sidebar - Glassy iOS panel
    ============================ */
 
 #sidebar {
@@ -88,14 +98,16 @@ html, body {
     left: 0;
     bottom: 0;
     width: 280px;
-    padding: 30px 20px;
-    background: linear-gradient(180deg, var(--secondary-color) 0%, #34495e 100%);
-    color: var(--white);
+    padding: 26px 20px 30px;
+    background: var(--glass-bg);
+    border-right: 1px solid var(--glass-border);
+    color: var(--text-dark);
     overflow-y: auto;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 16px 0 40px rgba(0, 0, 0, 0.4);
     transform: translateX(0);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
+    backdrop-filter: blur(var(--blur-strong));
 }
 
 #sidebar::-webkit-scrollbar {
@@ -103,104 +115,141 @@ html, body {
 }
 
 #sidebar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
 }
 
 #sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-}
-
-#sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.24);
+    border-radius: 4px;
 }
 
 /* Sidebar title */
 .sidebar-title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 30px;
+    margin-bottom: 18px;
     text-align: center;
-    border-bottom: 3px solid var(--primary-color);
-    padding-bottom: 18px;
-    color: var(--text-light);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-
-/* Filters section title */
-.filters-title {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: var(--text-light);
-    text-transform: uppercase;
+    color: var(--white);
     letter-spacing: 1px;
-    opacity: 0.9;
 }
 
-/* Filters grid container */
+/* Divider */
+.sidebar-divider {
+    border-color: rgba(255, 255, 255, 0.18);
+    margin: 14px 0 18px;
+}
+
+/* Filters title */
+.filters-title {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+}
+
+/* Filters container */
 .filters-grid {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
+    margin-top: 4px;
+}
+
+/* Single filter item */
+.filter-item {
+    width: 100%;
+}
+
+/* Filter label */
+.filter-label {
+    color: var(--text-muted);
+    text-transform: none;
 }
 
 /* ============================
-   Dropdown Filter Styling
-   Compatible with both legacy and react-select class names
+   Search Input – iOS style
    ============================ */
 
-/* Match both Dash/react-select naming conventions to ensure styling applies */
+.ios-search-input {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(44, 44, 46, 0.85);
+    color: var(--white);
+    outline: none;
+    font-size: 12px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(18px);
+    transition: var(--transition-smooth);
+}
+
+.ios-search-input::placeholder {
+    color: rgba(235, 235, 245, 0.5);
+}
+
+.ios-search-input:focus {
+    border-color: rgba(10, 132, 255, 0.7);
+    box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.4);
+}
+
+/* ============================
+   Dropdowns (react-select styling)
+   ============================ */
+
+/* Control */
 .Select-control,
 .Select__control,
 .Select-control.is-focused,
 .Select__control--is-focused {
-    background-color: rgba(255, 255, 255, 0.98) !important;
-    border: 2px solid transparent !important;
-    border-radius: var(--border-radius) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+    background-color: rgba(28, 28, 30, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    min-height: 36px !important;
     transition: var(--transition-smooth) !important;
-    color: var(--text-dark) !important;
+    font-size: 12px !important;
 }
 
+/* Hover */
 .Select-control:hover,
 .Select__control:hover {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.12) !important;
+    border-color: rgba(10, 132, 255, 0.6) !important;
 }
 
-/* Placeholder and single value text */
+/* Value & placeholder */
 .Select-placeholder,
 .Select__placeholder,
 .Select-value,
 .Select__single-value,
 .Select__value-container {
     color: var(--text-dark) !important;
-    font-weight: 500 !important;
 }
 
-/* Menu / dropdown list */
+/* Menu */
 .Select-menu-outer,
 .Select__menu,
 .Select__menu-list {
-    background-color: var(--white) !important;
-    border: 1px solid rgba(0,0,0,0.06) !important;
-    border-radius: var(--border-radius) !important;
-    box-shadow: var(--shadow-medium) !important;
+    background-color: rgba(28, 28, 30, 0.98) !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: var(--shadow-light) !important;
 }
 
+/* Options */
 .Select-option,
 .Select__option {
     color: var(--text-dark) !important;
-    padding: 10px 12px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
     transition: var(--transition-smooth) !important;
 }
 
 .Select-option:hover,
 .Select__option:hover {
-    background-color: rgba(52, 152, 219, 0.06) !important;
-    color: var(--text-dark) !important;
+    background-color: rgba(10, 132, 255, 0.2) !important;
 }
 
 .Select-option.is-selected,
@@ -209,98 +258,206 @@ html, body {
     color: var(--white) !important;
 }
 
-/* Multi-value / chips */
+/* Multi values */
 .Select-multi-value,
 .Select__multi-value {
-    background: rgba(52,152,219,0.12) !important;
-    color: var(--text-dark) !important;
-    border-radius: 4px !important;
+    background: rgba(10, 132, 255, 0.18) !important;
+    border-radius: 999px !important;
 }
 
-/* Ensure the indicator and clear button are visible */
-.Select-indicators,
-.Select__indicators {
-    color: var(--text-dark) !important;
-}
-
-/* Force the input text color inside the control */
-.Select-input input,
-.Select__input input {
-    color: var(--text-dark) !important;
-}
-
-/* Extra defensive rules to cover Dash/react-select generated classes
-   and ensure dropdown option and selected text are readable when
-   dropdowns are inside the dark sidebar. Targets both legacy and
-   generated class patterns and forces color for all descendants. */
+/* Force dark text inside sidebar dropdowns */
 #sidebar .custom-dropdown,
 #sidebar .custom-dropdown *,
-#sidebar .Select-control,
-#sidebar .Select__control,
-#sidebar .Select-control *,
-#sidebar .Select__control *,
 #sidebar [role="option"],
-#sidebar [role="option"] *,
-#sidebar [role="listbox"],
-#sidebar [role="listbox"] * {
-    color: var(--text-dark) !important;
-}
-
-/* Also target common generated single-value/option classes used by react-select */
-#sidebar [class*="singleValue"],
-#sidebar [class*="singleValue"] *,
-#sidebar [class*="option"],
-#sidebar [class*="option"] * {
+#sidebar [role="option"] * {
     color: var(--text-dark) !important;
 }
 
 /* ============================
-   Content Area Styling
+   Content Area
    ============================ */
 
 #content {
     margin-left: 280px;
-    padding: 30px;
+    padding: 24px 24px 40px;
     min-height: 100vh;
-    background-color: var(--light-bg);
     transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#content.sidebar-hidden {
-    margin-left: 0;
-}
-
-/* Main heading */
-#content h1 {
-    text-align: center;
-    margin-bottom: 40px;
+    background: var(--bg-main);
     color: var(--text-dark);
-    font-size: 36px;
+}
+
+/* iOS top bar / dynamic island style */
+.ios-top-bar {
+    max-width: 880px;
+    margin: 12px auto 20px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.28), rgba(72, 72, 74, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    backdrop-filter: blur(24px);
+}
+
+.ios-top-title {
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: -0.5px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Main content container */
+.ios-top-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Main glass card */
 #main-content {
-    background-color: var(--white);
-    padding: 40px;
-    border-radius: var(--border-radius);
+    max-width: 1100px;
+    margin: 18px auto 0;
+    padding: 28px 24px 32px;
+    border-radius: var(--border-radius-lg);
+    background: var(--glass-soft-bg);
+    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-light);
-    transition: var(--transition-smooth);
-    min-height: 400px;
+    backdrop-filter: blur(var(--blur-strong));
+    animation: fadeIn 0.4s ease-out;
 }
 
-#main-content:hover {
-    box-shadow: var(--shadow-medium);
+/* Title & description */
+#main-content h1 {
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.lead-text {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 22px;
 }
 
 /* ============================
-   Responsive Design
+   Buttons – iOS primary/secondary
    ============================ */
 
-/* Tablet and smaller screens */
-@media (max-width: 768px) {
+.ios-primary-btn {
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    background: linear-gradient(135deg, #0a84ff, #64d2ff) !important;
+    box-shadow: 0 12px 30px rgba(10, 132, 255, 0.45) !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.ios-primary-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 45px rgba(10, 132, 255, 0.6) !important;
+}
+
+.ios-secondary-btn {
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    background: rgba(58, 58, 60, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    color: var(--text-dark) !important;
+}
+
+/* ============================
+   Report Card & Stats
+   ============================ */
+
+.report-card {
+    margin-top: 20px;
+    padding: 20px 18px 24px;
+    border-radius: var(--border-radius-lg);
+    background: rgba(28, 28, 30, 0.92);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-light);
+    backdrop-filter: blur(var(--blur-strong));
+    animation: fadeInUp 0.38s ease-out;
+}
+
+.report-title {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.section-title {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+/* Cards from Bootstrap */
+.ios-stat-card {
+    border-radius: 22px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.09), rgba(28,28,30,0.96)) !important;
+    color: var(--text-dark) !important;
+    box-shadow: var(--shadow-soft);
+}
+
+.ios-stat-card .card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    background: transparent;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+}
+
+.ios-stat-card .card-body h2 {
+    font-size: 22px;
+    margin: 0;
+}
+
+/* Color accents */
+.ios-stat-primary {
+    box-shadow: 0 0 0 1px var(--primary-soft), var(--shadow-soft);
+}
+
+.ios-stat-warning {
+    box-shadow: 0 0 0 1px rgba(255, 214, 10, 0.18), var(--shadow-soft);
+}
+
+.ios-stat-danger {
+    box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-soft);
+}
+
+/* ============================
+   Charts
+   ============================ */
+
+.ios-chart {
+    border-radius: 20px;
+    background: rgba(28, 28, 30, 0.95);
+    padding: 10px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(18px);
+}
+
+.ios-chart-placeholder {
+    height: 400px;
+    border-radius: 20px;
+    background: rgba(28, 28, 30, 0.9);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Alerts */
+.ios-alert {
+    border-radius: 18px !important;
+}
+
+/* ============================
+   Responsive
+   ============================ */
+
+@media (max-width: 900px) {
     #sidebar {
         width: 250px;
     }
@@ -310,113 +467,49 @@ html, body {
         padding: 20px;
     }
 
-    #toggle-button {
-        padding: 10px 14px;
-        font-size: 14px;
-    }
-
-    #content h1 {
-        font-size: 28px;
-        margin-bottom: 30px;
-    }
-
     #main-content {
-        padding: 20px;
+        padding: 20px 16px 24px;
     }
 }
 
-/* Mobile screens */
-@media (max-width: 480px) {
-    #sidebar {
-        width: 100%;
-        max-width: 280px;
-    }
-
-    #content {
-        padding: 15px;
-    }
-
+@media (max-width: 600px) {
     #toggle-button {
-        padding: 10px 12px;
-        font-size: 12px;
+        top: 14px;
+        left: 12px;
+        font-size: 11px;
+        padding: 8px 12px;
     }
 
-    #content h1 {
-        font-size: 22px;
-        margin-bottom: 20px;
+    .ios-top-bar {
+        margin-top: 40px;
+        padding: 8px 14px;
     }
 
-    #main-content {
-        padding: 15px;
-        min-height: 300px;
+    #main-content h1 {
+        font-size: 20px;
+    }
+
+    .report-card {
+        padding: 16px;
     }
 }
 
 /* ============================
-   Animation Keyframes
+   Animations
    ============================ */
-
-@keyframes slideInFromLeft {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideOutToLeft {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-}
 
 @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
     from {
         opacity: 0;
+        transform: translateY(12px);
     }
     to {
         opacity: 1;
+        transform: translateY(0);
     }
 }
-
-#sidebar.visible {
-    animation: slideInFromLeft 0.35s ease-out;
-}
-
-#sidebar.hidden {
-    animation: slideOutToLeft 0.35s ease-out;
-}
-
-/* ============================
-   Utility Classes
-   ============================ */
-
-.text-center {
-    text-align: center;
-}
-
-.mt-0 { margin-top: 0; }
-.mt-1 { margin-top: 5px; }
-.mt-2 { margin-top: 10px; }
-.mt-3 { margin-top: 15px; }
-.mt-4 { margin-top: 20px; }
-
-.mb-0 { margin-bottom: 0; }
-.mb-1 { margin-bottom: 5px; }
-.mb-2 { margin-bottom: 10px; }
-.mb-3 { margin-bottom: 15px; }
-.mb-4 { margin-bottom: 20px; }
-
-.p-0 { padding: 0; }
-.p-1 { padding: 5px; }
-.p-2 { padding: 10px; }
-.p-3 { padding: 15px; }
-.p-4 { padding: 20px; }
