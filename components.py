@@ -161,6 +161,8 @@ FILTER_COLUMNS = [
     {"column": "POSITION_IN_VEHICLE", "label": "Position in Vehicle"},
     {"column": "SAFETY_EQUIPMENT", "label": "Safety Equipment"},
     {"column": "BODILY_INJURY", "label": "Bodily Injury"},
+    {"column": "COMPLAINT", "label": "Complaint"},
+    {"column": "PERSON_INJURY", "label": "Injury Type"},
 ]
 
 
