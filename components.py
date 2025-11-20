@@ -157,7 +157,6 @@ def create_filters_grid(df: pd.DataFrame, columns_config: list, sidebar: bool = 
 FILTER_COLUMNS = [
     {"column": "BOROUGH", "label": "Borough"},
     {"column": "PERSON_TYPE", "label": "Person Type"},
-    {"column": "PERSON_INJURY", "label": "Injury Type"},
     {"column": "PERSON_SEX", "label": "Person Sex"},
     {"column": "POSITION_IN_VEHICLE", "label": "Position in Vehicle"},
     {"column": "SAFETY_EQUIPMENT", "label": "Safety Equipment"},
