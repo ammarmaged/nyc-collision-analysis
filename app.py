@@ -625,13 +625,14 @@ def generate_report_in_page(n_open, *filter_values):
                 )
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_pie), className="ios-chart"))
 
-        # 1. BAR (Dynamic - Top 3 Streets per Borough) - VERTICAL UPDATE
+        # 1. BAR (Dynamic - Top 3 Streets per Borough) - VERTICAL GROUPED
         if "BOROUGH" in crash_level_df.columns and "STREET NAME" in crash_level_df.columns:
             street_data = crash_level_df.dropna(subset=["BOROUGH", "STREET NAME"])
             street_data = street_data[street_data["STREET NAME"].astype(str).str.strip() != ""]
             
             street_counts = street_data.groupby(["BOROUGH", "STREET NAME"], observed=True).size().reset_index(name="Crashes")
             
+            # Get top 3 streets per borough
             top_streets = (
                 street_counts.sort_values(["BOROUGH", "Crashes"], ascending=[True, False])
                 .groupby("BOROUGH")
@@ -640,20 +641,22 @@ def generate_report_in_page(n_open, *filter_values):
             )
             
             if not top_streets.empty:
-                # Sort by BOROUGH for grouping, then Crashes descending for visual order
-                top_streets = top_streets.sort_values(["BOROUGH", "Crashes"], ascending=[True, False])
+                # Assign a 'Rank' (1, 2, 3) to each street within its borough
+                # This is the key trick: using Rank as 'color' forces them into 3 side-by-side groups
+                top_streets["Rank"] = top_streets.groupby("BOROUGH").cumcount().astype(str)
                 
                 fig_streets = px.bar(
                     top_streets,
-                    x="BOROUGH", # Borough on X Axis
-                    y="Crashes",
-                    color="STREET NAME", # Color by street to separate bars side-by-side
-                    text="STREET NAME",  # Label bars with street name
-                    title="Top 3 High-Crash Streets per Borough",
+                    x="BOROUGH",       # Boroughs on X axis
+                    y="Crashes",       # Height is crash count
+                    color="Rank",      # Groups them side-by-side (1st, 2nd, 3rd)
+                    barmode="group",   # Explicitly force side-by-side
+                    text="STREET NAME",# Label the bars with the actual street name
+                    title="Top 3 High-Crash Streets per Borough (Side-by-Side)",
                 )
-                # Hide legend (too many unique streets) and rotate text for readability
-                fig_streets.update_layout(showlegend=False)
+                
                 fig_streets.update_traces(textposition="inside", textangle=-90)
+                fig_streets.update_layout(showlegend=False) # Hide legend because "0, 1, 2" is confusing
                 
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_streets), className="ios-chart"))
 
