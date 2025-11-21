@@ -122,6 +122,9 @@ if "BODILY_INJURY" in df_with_year.columns and "PERSON_INJURY" in df_with_year.c
         )
         rq3_data["Status"] = "Killed"
         
+        # Ensure strings
+        rq3_data["BODILY_INJURY"] = rq3_data["BODILY_INJURY"].astype(str)
+
         STATIC_RQ3_FIG = px.density_heatmap(
             rq3_data,
             x="BODILY_INJURY",
@@ -154,6 +157,9 @@ if "POSITION_IN_VEHICLE" in df_with_year.columns and "PERSON_INJURY" in df_with_
         )
         rq4_data["Status"] = "Killed"
         
+        # Ensure strings
+        rq4_data["POSITION_IN_VEHICLE"] = rq4_data["POSITION_IN_VEHICLE"].astype(str)
+
         STATIC_RQ4_FIG = px.density_heatmap(
             rq4_data,
             x="POSITION_IN_VEHICLE",
@@ -239,9 +245,12 @@ if rq6_cols.issubset(df_with_year.columns):
             .tail(10) 
         )
         
+        # --- FIX: Point 'y' to the COMPLAINT column name, NOT the index ---
+        rq6_data = rq6_data.reset_index() # Ensure COMPLAINT is a column, not index
+        
         STATIC_RQ6_FIG = px.bar(
             rq6_data,
-            y="COMPLAINT",
+            y="COMPLAINT", # Correct column name
             x="Count",
             orientation='h',
             title="RQ6 – Top Complaints for Injured Pedestrians (All Time)",
@@ -276,6 +285,10 @@ if "PERSON_SEX" in df_with_year.columns and factor_col_7 in df_with_year.columns
             .head(5)
         )
         
+        # Ensure strings
+        rq7_data["PERSON_SEX"] = rq7_data["PERSON_SEX"].astype(str)
+        rq7_data[factor_col_7] = rq7_data[factor_col_7].astype(str)
+
         STATIC_RQ7_FIG = px.bar(
             rq7_data,
             x="PERSON_SEX",
@@ -302,6 +315,9 @@ if "SAFETY_EQUIPMENT" in df_with_year.columns and "PERSON_TYPE" in df_with_year.
             .reset_index(name="Count")
         )
         
+        # Ensure strings
+        rq8_data["SAFETY_EQUIPMENT"] = rq8_data["SAFETY_EQUIPMENT"].astype(str)
+
         STATIC_RQ8_FIG = px.treemap(
             rq8_data,
             path=["SAFETY_EQUIPMENT"],
@@ -333,10 +349,13 @@ if "PERSON_TYPE" in df_with_year.columns and "BODILY_INJURY" in df_with_year.col
             .sort_values("Count", ascending=False)
             .head(10) 
         )
-
+        
+        # --- FIX: Use the actual column/index name for Y axis ---
+        rq9_data = rq9_data.reset_index() # Ensure BODILY_INJURY is a column
+        
         STATIC_RQ9_FIG = px.funnel(
             rq9_data,
-            y="BODILY_INJURY",
+            y="BODILY_INJURY", # Correct column name
             x="Count",
             title="RQ9 – Most Common Bodily Injuries for Pedestrians (All Time)",
             color="Count",
@@ -377,13 +396,10 @@ if "CRASH_DATETIME" in df_with_year.columns and "COLLISION_ID" in df_with_year.c
 
 app = Dash(
     __name__,
-    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    external_stylesheets=["assets/styles.css", dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
 )
-
-server = app.server
-
-app.title = "NYC Motor Vehicle Collisions"
+app.title = "NYC Motor Vehicle Collisions – iPhone 17 Pro Edition"
 
 TOGGLE_BUTTON_STYLE = {
     "position": "fixed", "top": "20px", "right": "24px", "left": "auto", "zIndex": 1100,
@@ -569,16 +585,18 @@ def generate_report_in_page(n_open, *filter_values):
         # BAR (Dynamic - Top Factors) - EXCLUDE Unspecified
         factor_col = "CONTRIBUTING FACTOR VEHICLE 1"
         if factor_col in filtered_df.columns:
-            factors = filtered_df[~filtered_df[factor_col].astype(str).str.upper().str.contains("UNSPECIFIED|UNKNOWN", na=False)]
+            factors = filtered_df[~filtered_df[factor_col].astype(str).str.upper().str.contains("UNSPECIFIED|UNKNOWN", na=False)].copy()
             if not factors.empty:
-                f_counts = factors[factor_col].value_counts().head(5).reset_index(name="Count")
-                fig_f = px.bar(f_counts, x=factor_col, y="Count", title="Top 5 Contributing Factors", color=factor_col)
+                f_counts = factors[factor_col].astype(str).value_counts().head(5).reset_index(name="Count")
+                f_counts.columns = [factor_col, "Count"]
+                fig_f = px.bar(f_counts, x=factor_col, y="Count", title="Top 5 Contributing Factors (Excl. Unspecified)", color=factor_col)
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_f), className="ios-chart"))
         
         # PIE (Dynamic - Person Sex Distribution)
         if "PERSON_SEX" in filtered_df.columns:
-            sex_counts = filtered_df["PERSON_SEX"].value_counts().reset_index(name="Count")
+            sex_counts = filtered_df["PERSON_SEX"].astype(str).value_counts().reset_index(name="Count")
             if not sex_counts.empty:
+                sex_counts.columns = ["PERSON_SEX", "Count"]
                 fig_pie = px.pie(
                     sex_counts, 
                     names="PERSON_SEX", 
@@ -591,6 +609,7 @@ def generate_report_in_page(n_open, *filter_values):
         if "BOROUGH" in crash_level_df.columns:
             boro_counts = crash_level_df["BOROUGH"].value_counts().reset_index(name="Crashes")
             if not boro_counts.empty:
+                boro_counts["BOROUGH"] = boro_counts["BOROUGH"].astype(str)
                 fig_boro = px.bar(boro_counts, x="BOROUGH", y="Crashes", title="Crashes by Borough", color="BOROUGH")
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_boro), className="ios-chart"))
 
@@ -606,38 +625,63 @@ def generate_report_in_page(n_open, *filter_values):
                  # Limit to top categories
                  top_pos = hm_data["POSITION_IN_VEHICLE"].value_counts().head(10).index
                  top_bod = hm_data["BODILY_INJURY"].value_counts().head(10).index
-                 hm_data = hm_data[hm_data["POSITION_IN_VEHICLE"].isin(top_pos) & hm_data["BODILY_INJURY"].isin(top_bod)]
                  
+                 hm_data = hm_data[hm_data["POSITION_IN_VEHICLE"].isin(top_pos) & hm_data["BODILY_INJURY"].isin(top_bod)].copy()
+                 hm_data["POSITION_IN_VEHICLE"] = hm_data["POSITION_IN_VEHICLE"].astype(str)
+                 hm_data["BODILY_INJURY"] = hm_data["BODILY_INJURY"].astype(str)
+                 
+                 hm_data_grouped = hm_data.groupby(["POSITION_IN_VEHICLE", "BODILY_INJURY"], observed=True).size().reset_index(name="Count")
+
                  fig_hm = px.density_heatmap(
-                     hm_data, 
+                     hm_data_grouped, 
                      x="POSITION_IN_VEHICLE", 
                      y="BODILY_INJURY", 
+                     z="Count",
                      text_auto=True, 
                      title="Heatmap: Position vs Bodily Injury (Filtered)", 
                      color_continuous_scale="Viridis"
                  )
                  overview_charts.append(dcc.Graph(figure=style_figure(fig_hm), className="ios-chart"))
 
-        # STACKED BAR (Dynamic - Person Type vs Safety Equipment)
+        # TREEMAP (Dynamic - Person Type vs Safety Equipment)
         if "PERSON_TYPE" in filtered_df.columns and "SAFETY_EQUIPMENT" in filtered_df.columns:
              sb_data = filtered_df.dropna(subset=["PERSON_TYPE", "SAFETY_EQUIPMENT"])
+             # Exclude "Unknown" from Person Type
+             sb_data = sb_data[~sb_data["PERSON_TYPE"].astype(str).str.upper().isin(["UNKNOWN"])]
              sb_data = sb_data[~sb_data["SAFETY_EQUIPMENT"].astype(str).str.upper().isin(["UNKNOWN", "NONE", "OTHER"])]
              
              if not sb_data.empty:
-                 # Group for stacked bar
+                 sb_data["PERSON_TYPE"] = sb_data["PERSON_TYPE"].astype(str)
+                 sb_data["SAFETY_EQUIPMENT"] = sb_data["SAFETY_EQUIPMENT"].astype(str)
+                 
                  sb_counts = sb_data.groupby(["PERSON_TYPE", "SAFETY_EQUIPMENT"], observed=True).size().reset_index(name="Count")
-                 # Limit to top person types to avoid clutter
                  top_pt = sb_counts.groupby("PERSON_TYPE")["Count"].sum().nlargest(10).index
                  sb_counts = sb_counts[sb_counts["PERSON_TYPE"].isin(top_pt)]
 
-                 fig_sb = px.bar(
+                 fig_sb = px.treemap(
                      sb_counts, 
-                     x="PERSON_TYPE", 
-                     y="Count", 
-                     color="SAFETY_EQUIPMENT", 
-                     title="Safety Equipment by Person Type (Filtered)"
+                     path=['PERSON_TYPE', 'SAFETY_EQUIPMENT'], 
+                     values='Count',
+                     color='PERSON_TYPE', 
+                     title="Safety Equipment by Person Type (Filtered)",
+                     color_discrete_sequence=px.colors.qualitative.Pastel
                  )
+                 fig_sb.update_traces(textinfo="label+value+percent parent")
                  overview_charts.append(dcc.Graph(figure=style_figure(fig_sb), className="ios-chart"))
+
+        # BOX PLOT (Dynamic - Age Distribution)
+        if "PERSON_AGE" in filtered_df.columns:
+             age_data = filtered_df.dropna(subset=["PERSON_AGE"])
+             age_data = age_data[(age_data["PERSON_AGE"] >= 0) & (age_data["PERSON_AGE"] <= 110)]
+             
+             if not age_data.empty:
+                 fig_box = px.box(
+                     age_data, 
+                     y="PERSON_AGE", 
+                     title="Age Distribution (Filtered)",
+                     points="outliers" 
+                 )
+                 overview_charts.append(dcc.Graph(figure=style_figure(fig_box), className="ios-chart"))
 
 
         # RQs
