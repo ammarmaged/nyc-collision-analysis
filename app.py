@@ -377,7 +377,7 @@ if "CRASH_DATETIME" in df_with_year.columns and "COLLISION_ID" in df_with_year.c
 
 app = Dash(
     __name__,
-    external_stylesheets=["assets/styles.css", dbc.themes.BOOTSTRAP],
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
 )
 
