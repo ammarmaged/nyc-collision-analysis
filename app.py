@@ -400,7 +400,10 @@ app = Dash(
     external_stylesheets=["assets/styles.css", dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
 )
-app.title = "NYC Motor Vehicle Collisions – iPhone 17 Pro Edition"
+
+server = app.server 
+
+app.title = "NYC Motor Vehicle Collisions"
 
 TOGGLE_BUTTON_STYLE = {
     "position": "fixed", "top": "20px", "right": "24px", "left": "auto", "zIndex": 1100,
