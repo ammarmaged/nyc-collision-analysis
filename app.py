@@ -622,15 +622,13 @@ def generate_report_in_page(n_open, *filter_values):
                 )
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_pie), className="ios-chart"))
 
-        # 1. BAR (Dynamic - Top 3 Streets per Borough)
+        # 1. BAR (Dynamic - Top 3 Streets per Borough) - VERTICAL UPDATE
         if "BOROUGH" in crash_level_df.columns and "STREET NAME" in crash_level_df.columns:
             street_data = crash_level_df.dropna(subset=["BOROUGH", "STREET NAME"])
             street_data = street_data[street_data["STREET NAME"].astype(str).str.strip() != ""]
             
-            # Count crashes per street per borough
             street_counts = street_data.groupby(["BOROUGH", "STREET NAME"], observed=True).size().reset_index(name="Crashes")
             
-            # Get top 3 streets for each borough
             top_streets = (
                 street_counts.sort_values(["BOROUGH", "Crashes"], ascending=[True, False])
                 .groupby("BOROUGH")
@@ -639,23 +637,20 @@ def generate_report_in_page(n_open, *filter_values):
             )
             
             if not top_streets.empty:
-                # --- UPDATED SORTING ---
-                # Sort by BOROUGH first to keep them grouped, then by Crashes for order
-                top_streets = top_streets.sort_values(["BOROUGH", "Crashes"], ascending=[True, True])
+                # Sort by BOROUGH for grouping, then Crashes descending for visual order
+                top_streets = top_streets.sort_values(["BOROUGH", "Crashes"], ascending=[True, False])
                 
                 fig_streets = px.bar(
                     top_streets,
-                    y="STREET NAME",
-                    x="Crashes",
-                    color="BOROUGH",
-                    orientation='h',
+                    x="BOROUGH", # Borough on X Axis
+                    y="Crashes",
+                    color="STREET NAME", # Color by street to separate bars side-by-side
+                    text="STREET NAME",  # Label bars with street name
                     title="Top 3 High-Crash Streets per Borough",
-                    text="Crashes"
                 )
-                fig_streets.update_traces(textposition="outside")
-                
-                # REMOVED: fig_streets.update_layout(yaxis={'categoryorder':'total ascending'}) 
-                # removing this ensures Plotly respects the DataFrame order (Grouped by Borough)
+                # Hide legend (too many unique streets) and rotate text for readability
+                fig_streets.update_layout(showlegend=False)
+                fig_streets.update_traces(textposition="inside", textangle=-90)
                 
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_streets), className="ios-chart"))
 
