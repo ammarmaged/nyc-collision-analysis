@@ -364,7 +364,7 @@ if "PERSON_TYPE" in df_with_year.columns and "BODILY_INJURY" in df_with_year.col
         STATIC_RQ9_FIG = style_figure(STATIC_RQ9_FIG, "RQ9 – Most Common Bodily Injuries for Pedestrians (All Time)")
 
 
-# --- RQ10: Crash Frequency by Hour of Day (GRADIENT BAR CHART) ---
+# --- RQ10: Crash Frequency by Hour of Day (LINE CHART) ---
 STATIC_RQ10_FIG = None
 if "CRASH_DATETIME" in df_with_year.columns and "COLLISION_ID" in df_with_year.columns:
     # Use deduplicated for crash counts
@@ -378,17 +378,18 @@ if "CRASH_DATETIME" in df_with_year.columns and "COLLISION_ID" in df_with_year.c
     )
     
     if not rq10_data.empty:
-        STATIC_RQ10_FIG = px.bar(
+        STATIC_RQ10_FIG = px.line(
             rq10_data,
             x="HOUR",
             y="CrashCount",
             title="RQ10 – Crash Frequency by Hour of Day (All Time)",
-            color="CrashCount", 
-            color_continuous_scale="Turbo"
+            markers=True, # Adds dots at each data point
         )
+        # Optional: Set a specific color that pops in Dark Mode (Cyan/Teal)
+        STATIC_RQ10_FIG.update_traces(line_color="#00d2ff", line_width=3)
+        
         STATIC_RQ10_FIG.update_xaxes(tickmode='linear', tick0=0, dtick=1)
         STATIC_RQ10_FIG = style_figure(STATIC_RQ10_FIG, "RQ10 – Crash Frequency by Hour of Day (All Time)")
-
 
 # =========================
 # Dash app Setup
@@ -581,7 +582,23 @@ def generate_report_in_page(n_open, *filter_values):
                  dbc.Col(dcc.Graph(figure=style_figure(fig_year), className="ios-chart"), md=6),
                  dbc.Col(dcc.Graph(figure=style_figure(fig_month), className="ios-chart"), md=6)
              ], className="mb-4"))
-
+        
+        # LINE (Dynamic - Crashes by Hour)
+        if "CRASH_DATETIME" in crash_level_df.columns:
+            # Extract hour directly from the datetime column
+            hour_counts = crash_level_df["CRASH_DATETIME"].dt.hour.value_counts().sort_index().reset_index()
+            hour_counts.columns = ["HOUR", "Crashes"]
+            
+            fig_hour = px.line(
+                hour_counts, 
+                x="HOUR", 
+                y="Crashes", 
+                title="Crashes by Hour of Day (Filtered)", 
+                markers=True
+            )
+            fig_hour.update_xaxes(tickmode='linear', tick0=0, dtick=1)
+            overview_charts.append(dcc.Graph(figure=style_figure(fig_hour), className="ios-chart"))
+        
         # BAR (Dynamic - Top Factors) - EXCLUDE Unspecified
         factor_col = "CONTRIBUTING FACTOR VEHICLE 1"
         if factor_col in filtered_df.columns:
@@ -605,14 +622,59 @@ def generate_report_in_page(n_open, *filter_values):
                 )
                 overview_charts.append(dcc.Graph(figure=style_figure(fig_pie), className="ios-chart"))
 
-        # BAR (Dynamic - Crashes by Borough)
+        # 1. BAR (Dynamic - Top 3 Streets per Borough)
+        if "BOROUGH" in crash_level_df.columns and "STREET NAME" in crash_level_df.columns:
+            street_data = crash_level_df.dropna(subset=["BOROUGH", "STREET NAME"])
+            street_data = street_data[street_data["STREET NAME"].astype(str).str.strip() != ""]
+            
+            # Count crashes per street per borough
+            street_counts = street_data.groupby(["BOROUGH", "STREET NAME"], observed=True).size().reset_index(name="Crashes")
+            
+            # Get top 3 streets for each borough
+            top_streets = (
+                street_counts.sort_values(["BOROUGH", "Crashes"], ascending=[True, False])
+                .groupby("BOROUGH")
+                .head(3)
+                .reset_index(drop=True)
+            )
+            
+            if not top_streets.empty:
+                # --- UPDATED SORTING ---
+                # Sort by BOROUGH first to keep them grouped, then by Crashes for order
+                top_streets = top_streets.sort_values(["BOROUGH", "Crashes"], ascending=[True, True])
+                
+                fig_streets = px.bar(
+                    top_streets,
+                    y="STREET NAME",
+                    x="Crashes",
+                    color="BOROUGH",
+                    orientation='h',
+                    title="Top 3 High-Crash Streets per Borough",
+                    text="Crashes"
+                )
+                fig_streets.update_traces(textposition="outside")
+                
+                # REMOVED: fig_streets.update_layout(yaxis={'categoryorder':'total ascending'}) 
+                # removing this ensures Plotly respects the DataFrame order (Grouped by Borough)
+                
+                overview_charts.append(dcc.Graph(figure=style_figure(fig_streets), className="ios-chart"))
+
+        # 2. DOUGHNUT (Dynamic - Crashes by Borough)
         if "BOROUGH" in crash_level_df.columns:
             boro_counts = crash_level_df["BOROUGH"].value_counts().reset_index(name="Crashes")
             if not boro_counts.empty:
                 boro_counts["BOROUGH"] = boro_counts["BOROUGH"].astype(str)
-                fig_boro = px.bar(boro_counts, x="BOROUGH", y="Crashes", title="Crashes by Borough", color="BOROUGH")
-                overview_charts.append(dcc.Graph(figure=style_figure(fig_boro), className="ios-chart"))
-
+                fig_doughnut = px.pie(
+                    boro_counts, 
+                    names="BOROUGH", 
+                    values="Crashes", 
+                    title="Crash Distribution by Borough", 
+                    hole=0.4, # Creates the Doughnut effect
+                    color_discrete_sequence=px.colors.qualitative.Bold
+                )
+                fig_doughnut.update_traces(textinfo="percent+label")
+                overview_charts.append(dcc.Graph(figure=style_figure(fig_doughnut), className="ios-chart"))
+        
         # HEATMAP (Dynamic - Position vs Bodily Injury)
         if "POSITION_IN_VEHICLE" in filtered_df.columns and "BODILY_INJURY" in filtered_df.columns:
              hm_data = filtered_df.dropna(subset=["POSITION_IN_VEHICLE", "BODILY_INJURY"])
@@ -646,7 +708,7 @@ def generate_report_in_page(n_open, *filter_values):
         # TREEMAP (Dynamic - Person Type vs Safety Equipment)
         if "PERSON_TYPE" in filtered_df.columns and "SAFETY_EQUIPMENT" in filtered_df.columns:
              sb_data = filtered_df.dropna(subset=["PERSON_TYPE", "SAFETY_EQUIPMENT"])
-             # Exclude "Unknown" from Person Type
+             # Exclude "Unknown" and other uninformative values
              sb_data = sb_data[~sb_data["PERSON_TYPE"].astype(str).str.upper().isin(["UNKNOWN"])]
              sb_data = sb_data[~sb_data["SAFETY_EQUIPMENT"].astype(str).str.upper().isin(["UNKNOWN", "NONE", "OTHER"])]
              
@@ -655,6 +717,8 @@ def generate_report_in_page(n_open, *filter_values):
                  sb_data["SAFETY_EQUIPMENT"] = sb_data["SAFETY_EQUIPMENT"].astype(str)
                  
                  sb_counts = sb_data.groupby(["PERSON_TYPE", "SAFETY_EQUIPMENT"], observed=True).size().reset_index(name="Count")
+                 
+                 # Limit to top Person Types to keep chart readable
                  top_pt = sb_counts.groupby("PERSON_TYPE")["Count"].sum().nlargest(10).index
                  sb_counts = sb_counts[sb_counts["PERSON_TYPE"].isin(top_pt)]
 
@@ -662,13 +726,36 @@ def generate_report_in_page(n_open, *filter_values):
                      sb_counts, 
                      path=['PERSON_TYPE', 'SAFETY_EQUIPMENT'], 
                      values='Count',
-                     color='PERSON_TYPE', 
+                     color='Count',  # <--- UPDATED: Color by Count for "Levels"
                      title="Safety Equipment by Person Type (Filtered)",
-                     color_discrete_sequence=px.colors.qualitative.Pastel
+                     color_continuous_scale="Teal" # <--- UPDATED: Gradient Scale
                  )
                  fig_sb.update_traces(textinfo="label+value+percent parent")
                  overview_charts.append(dcc.Graph(figure=style_figure(fig_sb), className="ios-chart"))
+        # TREEMAP (Dynamic - Person Type vs Bodily Injury)
+        if "PERSON_TYPE" in filtered_df.columns and "BODILY_INJURY" in filtered_df.columns:
+             bi_data = filtered_df.dropna(subset=["PERSON_TYPE", "BODILY_INJURY"])
+             # Exclude uninformative values
+             exclude_vals = ["UNKNOWN", "DOES NOT APPLY", "N/A", "NOT APPLICABLE", "UNSPECIFIED"]
+             bi_data = bi_data[~bi_data["PERSON_TYPE"].astype(str).str.upper().isin(exclude_vals)]
+             bi_data = bi_data[~bi_data["BODILY_INJURY"].astype(str).str.upper().isin(exclude_vals)]
+             
+             if not bi_data.empty:
+                 bi_data["PERSON_TYPE"] = bi_data["PERSON_TYPE"].astype(str)
+                 bi_data["BODILY_INJURY"] = bi_data["BODILY_INJURY"].astype(str)
+                 
+                 bi_counts = bi_data.groupby(["PERSON_TYPE", "BODILY_INJURY"], observed=True).size().reset_index(name="Count")
 
+                 fig_bi = px.treemap(
+                     bi_counts, 
+                     path=['PERSON_TYPE', 'BODILY_INJURY'], 
+                     values='Count',
+                     color='Count', # <--- UPDATED: Color by Count for "Levels"
+                     title="Bodily Injury by Person Type (Filtered)",
+                     color_continuous_scale="Reds" # <--- UPDATED: Gradient Scale
+                 )
+                 fig_bi.update_traces(textinfo="label+value+percent parent")
+                 overview_charts.append(dcc.Graph(figure=style_figure(fig_bi), className="ios-chart"))
         # BOX PLOT (Dynamic - Age Distribution)
         if "PERSON_AGE" in filtered_df.columns:
              age_data = filtered_df.dropna(subset=["PERSON_AGE"])
@@ -682,6 +769,92 @@ def generate_report_in_page(n_open, *filter_values):
                      points="outliers" 
                  )
                  overview_charts.append(dcc.Graph(figure=style_figure(fig_box), className="ios-chart"))
+        
+        # SIDE-BY-SIDE HEATMAPS (Dynamic: Injury Analysis)
+        if {"PERSON_INJURY", "BODILY_INJURY", "POSITION_IN_VEHICLE"}.issubset(filtered_df.columns):
+             exclude_vals = ["UNKNOWN", "DOES NOT APPLY", "N/A", "NOT APPLICABLE", "UNSPECIFIED"]
+             row_content = []
+
+             # 1. Heatmap: Person Injury vs Bodily Injury
+             h1_data = filtered_df.dropna(subset=["PERSON_INJURY", "BODILY_INJURY"])
+             h1_data = h1_data[
+                 ~h1_data["PERSON_INJURY"].astype(str).str.upper().isin(exclude_vals) &
+                 ~h1_data["BODILY_INJURY"].astype(str).str.upper().isin(exclude_vals)
+             ]
+             
+             if not h1_data.empty:
+                 # Limit to top 15 categories for readability
+                 top_pi = h1_data["PERSON_INJURY"].value_counts().head(15).index
+                 top_bi = h1_data["BODILY_INJURY"].value_counts().head(15).index
+                 h1_data = h1_data[h1_data["PERSON_INJURY"].isin(top_pi) & h1_data["BODILY_INJURY"].isin(top_bi)]
+                 
+                 fig_h1 = px.density_heatmap(
+                     h1_data, 
+                     x="BODILY_INJURY", 
+                     y="PERSON_INJURY", 
+                     text_auto=True, # Counts values inside cells
+                     title="Person Injury vs Bodily Injury",
+                     color_continuous_scale="Blues"
+                 )
+                 row_content.append(dbc.Col(dcc.Graph(figure=style_figure(fig_h1), className="ios-chart"), md=6))
+
+             # 2. Heatmap: Person Injury vs Position in Vehicle
+             h2_data = filtered_df.dropna(subset=["PERSON_INJURY", "POSITION_IN_VEHICLE"])
+             h2_data = h2_data[
+                 ~h2_data["PERSON_INJURY"].astype(str).str.upper().isin(exclude_vals) &
+                 ~h2_data["POSITION_IN_VEHICLE"].astype(str).str.upper().isin(exclude_vals)
+             ]
+             
+             if not h2_data.empty:
+                 # Limit to top 15 categories
+                 top_pi2 = h2_data["PERSON_INJURY"].value_counts().head(15).index
+                 top_pos = h2_data["POSITION_IN_VEHICLE"].value_counts().head(15).index
+                 h2_data = h2_data[h2_data["PERSON_INJURY"].isin(top_pi2) & h2_data["POSITION_IN_VEHICLE"].isin(top_pos)]
+
+                 fig_h2 = px.density_heatmap(
+                     h2_data, 
+                     x="POSITION_IN_VEHICLE", 
+                     y="PERSON_INJURY", 
+                     text_auto=True, # Counts values inside cells
+                     title="Person Injury vs Position in Vehicle",
+                     color_continuous_scale="Oranges"
+                 )
+                 row_content.append(dbc.Col(dcc.Graph(figure=style_figure(fig_h2), className="ios-chart"), md=6))
+
+             # Append the row if we have at least one chart
+             if row_content:
+                 overview_charts.append(dbc.Row(row_content, className="mb-4"))
+
+    # SUNBURST (Dynamic: Person Type -> Injury -> Complaint)
+        if {"PERSON_TYPE", "PERSON_INJURY", "COMPLAINT"}.issubset(filtered_df.columns):
+             sb_cols = ["PERSON_TYPE", "PERSON_INJURY", "COMPLAINT"]
+             sb_data = filtered_df.dropna(subset=sb_cols)
+             
+             # Filter out uninformative values for cleaner visualization
+             exclude_vals = ["UNKNOWN", "DOES NOT APPLY", "N/A", "NOT APPLICABLE", "NONE"]
+             for col in sb_cols:
+                 sb_data = sb_data[~sb_data[col].astype(str).str.upper().isin(exclude_vals)]
+             
+             if not sb_data.empty:
+                 # To ensure performance and readability, we limit to the most frequent combinations if data is huge
+                 # Grouping first to reduce rows
+                 sb_grouped = sb_data.groupby(sb_cols, observed=True).size().reset_index(name="Count")
+                 
+                 # If too many unique complaints, keep only top 20 overall to avoid clutter
+                 top_complaints = sb_grouped.groupby("COMPLAINT")["Count"].sum().nlargest(20).index
+                 sb_grouped = sb_grouped[sb_grouped["COMPLAINT"].isin(top_complaints)]
+                 
+                 fig_sun = px.sunburst(
+                     sb_grouped,
+                     path=["PERSON_TYPE", "PERSON_INJURY", "COMPLAINT"],
+                     values="Count",
+                     title="Hierarchy: Person Type → Injury → Complaint",
+                     color="Count",
+                     color_continuous_scale="RdBu",
+                     branchvalues="total"
+                 )
+                 fig_sun = style_figure(fig_sun, "Hierarchy: Person Type → Injury → Complaint")
+                 overview_charts.append(dcc.Graph(figure=fig_sun, className="ios-chart"))  
 
 
         # RQs
