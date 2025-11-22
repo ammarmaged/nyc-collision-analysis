@@ -55,3 +55,8 @@ Reviewed all research questions and ensured accurate representation on the websi
 -Omar Bassem
 
 Selected and designed the visualizations used throughout the website.
+
+Deployment:
+we used hugging faces for the deploymnet instead of vercel or render as the dataset is too large and the free plan of  them doesn't give you enough ram to handle it.
+
+https://ammarmaged-nyc-collision-analysis.hf.space this is the deployment link (the website is huge so when click genertae report it require 3-4 minutes ti generate it)
