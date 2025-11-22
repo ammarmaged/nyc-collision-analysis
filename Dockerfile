@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 7860
 
 # Command to run the app using Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "300", "app:server"]
+CMD ["gunicorn", "-b", "0.0.0.0:7860", "--timeout", "1000", "app:server"]
